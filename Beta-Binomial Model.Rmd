@@ -1,0 +1,110 @@
+---
+title: "Beta Binomial Model (rstan)"
+author: "Revendra"
+date: "23/02/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(bayesplot)
+library(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+```
+
+```{r}
+bb_model <- "
+  data {
+    int<lower = 0, upper = 10> Y;
+  }
+  parameters {
+    real<lower = 0, upper = 1> pi;
+  }
+  model {
+    Y ~ binomial(10, pi);
+    pi ~ beta(2, 2);
+  }
+"
+```
+
+
+```{r}
+bb_sim <- stan(model_code = bb_model, data = list(Y = 9), 
+               chains = 4, iter = 5000*2, seed = 84735)
+```
+
+```{r}
+
+as.array(bb_sim, pars = "pi") %>% 
+  head(4)
+```
+
+# Trace plot
+```{r}
+mcmc_trace(bb_sim, pars = "pi", size = 0.1)
+```
+
+### Histogram of the Markov chain values
+```{r}
+mcmc_hist(bb_sim, pars = "pi") + 
+  yaxis_text(TRUE) + 
+  ylab("count")
+```
+
+#3# Density plot of the Markov chain values
+```{r}
+mcmc_dens(bb_sim, pars = "pi") + 
+  yaxis_text(TRUE) + 
+  ylab("density")
+```
+
+## Step 1: Specify Model
+```{r}
+bb_ashish_model <- "
+  data {
+    int<lower = 0, upper = 50> Y;
+  }
+  parameters {
+    real<lower = 0, upper = 1> pi;
+  }
+  model {
+    Y ~ binomial(50, pi);
+    pi ~ beta(45, 55);
+  }
+"
+```
+
+# STEP 2: SIMULATE the posterior
+```{r}
+
+bb_ashish_sim <- stan(model_code = bb_ashish_model, data = list(Y = 30), chains = 4, iter = 5000*2, seed = 84735)
+```
+
+### trace plot
+```{r}
+mcmc_trace(bb_ashish_sim, pars = "pi", size = 0.1)
+```
+
+### Histogram of the Markov chain values
+```{r}
+
+mcmc_hist(bb_ashish_sim, pars = "pi") + 
+  yaxis_text(TRUE) + 
+  ylab("count")
+```
+
+### Density plot of the Markov chain values
+```{r}
+mcmc_dens(bb_ashish_sim, pars = "pi") + 
+  yaxis_text(TRUE) + 
+  ylab("density")
+```
+```{r}
+summary(bb_ashish_sim)
+```
+
